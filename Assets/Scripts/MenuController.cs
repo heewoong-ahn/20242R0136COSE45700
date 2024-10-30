@@ -53,10 +53,13 @@ public class MenuController : MonoBehaviour
             case 0: // Start
                 SceneManager.LoadScene("MainScene");
                 break;
-            case 1: // Settings, Scene 대신 Dialog로 바꾸거나 삭제할 생각 중
+            case 1: //multi
+                SceneManager.LoadScene("multiTest");
+                break;
+            case 2: // Settings, Scene 대신 Dialog로 바꾸거나 삭제할 생각 중
                 SceneManager.LoadScene("TrainingScene");
                 break;
-            case 2: // Exit
+            case 3: // Exit
                 Application.Quit();
                 break;
         }

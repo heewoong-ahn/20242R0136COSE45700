@@ -27,6 +27,7 @@ public class leftPunch : MonoBehaviour
     //leftPunch �� �޸� collider�� trailer�� Ű�� ����.
     IEnumerator punch()
     {
+        
         yield return new WaitForSeconds(0.1f);
 
         trailEffect.enabled = true;

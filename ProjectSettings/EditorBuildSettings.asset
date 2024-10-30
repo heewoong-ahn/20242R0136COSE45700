@@ -9,6 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/StartScene.unity
     guid: a202e566d9c126e4b888e4abd283936c
   - enabled: 1
+    path: Assets/Scenes/MainSceneTEST.unity
+    guid: 0f499f2698bf6ee438cdcab22e3f18fd
+  - enabled: 1
+    path: Assets/Scenes/multiTest.unity
+    guid: adc30fb2f6e1e234d94b30f7867403b6
+  - enabled: 1
     path: Assets/Scenes/MainScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   - enabled: 1
@@ -20,4 +26,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/EndingScene.unity
     guid: 0f30ba598770a3f4eb2d104234c710c6
+  - enabled: 1
+    path: Assets/Scenes/MultiScene.unity
+    guid: 38892dd76a096294291afbbf064a6b81
   m_configObjects: {}
