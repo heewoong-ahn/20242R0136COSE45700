@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Collections.Generic;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace GameServer
 {
@@ -26,6 +27,7 @@ namespace GameServer
             Console.WriteLine("종료하려면 Enter 키를 누르세요...");
             Console.ReadLine();
 
+            //broadcastTimer.Dispose();
             udpServer.Close();
         }
 
@@ -52,56 +54,61 @@ namespace GameServer
             }
         }
 
+        static object lockObj = new object();
         static void HandleMessage(string message, IPEndPoint clientEP)
         {
             // 메시지를 '|'로 분리하여 명령과 데이터를 추출
             string[] parts = message.Split('|');
             string command = parts[0];
 
-            // 클라이언트 정보 가져오기 또는 생성
-            ClientInfo client = clients.Find(c => c.EndPoint.Equals(clientEP));
-            if (client == null)
+            lock (lockObj)
             {
-                client = new ClientInfo
+                // 클라이언트 정보 가져오기 또는 생성
+                ClientInfo client = clients.Find(c => c.EndPoint.Equals(clientEP));
+                if (client == null)
                 {
-                    EndPoint = clientEP,
-                    RoomId = null
-                };
-                clients.Add(client);
+                    client = new ClientInfo
+                    {
+                        EndPoint = clientEP,
+                        RoomId = null
+                    };
+                    clients.Add(client);
+                }
+
+                switch (command)
+                {
+                    case "CreateRoom":
+                        if (parts.Length >= 2)
+                        {
+                            string roomId = parts[1];
+                            HandleCreateRoom(client, roomId);
+                        }
+                        break;
+
+                    case "JoinRoom":
+                        if (parts.Length >= 2)
+                        {
+                            string roomId = parts[1];
+                            HandleJoinRoom(client, roomId);
+                        }
+                        break;
+
+                    // 추가적인 명령 처리 예정
+
+                    case "PlayerInput":
+                        if (parts.Length >= 2)
+                        {
+                            string jsonData = parts[1];
+                            HandlePlayerInput(client, jsonData);
+                        }
+                        break;
+
+                    default:
+                        SendResponse(client.EndPoint, "Error|알 수 없는 명령입니다.");
+                        break;
+                }
             }
-
-            switch (command)
-            {
-                case "CreateRoom":
-                    if (parts.Length >= 2)
-                    {
-                        string roomId = parts[1];
-                        HandleCreateRoom(client, roomId);
-                    }
-                    break;
-
-                case "JoinRoom":
-                    if (parts.Length >= 2)
-                    {
-                        string roomId = parts[1];
-                        HandleJoinRoom(client, roomId);
-                    }
-                    break;
-
-                // 추가적인 명령 처리 예정
-
-                case "PlayerInput":
-                    if (parts.Length >= 2)
-                    {
-                        string jsonData = parts[1];
-                        HandlePlayerInput(client, jsonData);
-                    }
-                    break;
-
-                default:
-                    SendResponse(client.EndPoint, "Error|알 수 없는 명령입니다.");
-                    break;
-            }
+            
         }
 
         static void HandleCreateRoom(ClientInfo client, string roomId)
@@ -112,7 +119,9 @@ namespace GameServer
                 room.Clients.Add(client);
                 rooms.Add(roomId, room);
                 client.RoomId = roomId;
-               // client.PlayerId = 1; //방을 만든 사람은 1 
+                client.PlayerInput.playerId = 1;
+                client.PlayerInput.position = new Vector3(-0.8517556f, 1.3f, -1.216699f);
+                // client.PlayerId = 1; //방을 만든 사람은 1 
                 Console.WriteLine($"{client.EndPoint}님이 방 {roomId}을 생성했습니다.");
 
                 SendResponse(client.EndPoint, $"RoomCreated|{roomId}|방이 생성되었습니다.");
@@ -123,6 +132,8 @@ namespace GameServer
             }
         }
 
+        private static Timer broadcastTimer;
+
         static void HandleJoinRoom(ClientInfo client, string roomId)
         {
             if (rooms.ContainsKey(roomId))
@@ -132,7 +143,9 @@ namespace GameServer
                 {
                     room.Clients.Add(client);
                     client.RoomId = roomId;
-                   // client.PlayerId = 2; //방에 들어간 사람은 2
+                    client.PlayerInput.playerId = 2;
+                    client.PlayerInput.position = new Vector3(-0.47f, 1.3f, 3f);
+                    // client.PlayerId = 2; //방에 들어간 사람은 2
                     Console.WriteLine($"{client.EndPoint}님이 방 {roomId}에 참여했습니다.");
 
                     SendResponse(client.EndPoint, $"RoomJoined|{roomId}|방에 참여했습니다.");
@@ -144,6 +157,9 @@ namespace GameServer
                         {
                             SendResponse(c.EndPoint, $"GameStart|{roomId}|게임을 시작합니다.");
                         }
+                        // 게임 시작 후에 타이머 시작
+                        broadcastTimer = new Timer(BroadcastAllRooms, null, 3100, 100);
+                        Console.WriteLine("위치 동기화 브로드캐스트 시작.");
                     }
                 }
                 else
@@ -163,12 +179,59 @@ namespace GameServer
             {
                 Room room = rooms[client.RoomId];
 
+                try
+                {
+                    client.PlayerInput = JsonConvert.DeserializeObject<PlayerInputData>(jsonData);
+                }
+                catch (Exception ex)
+                {
+                    SendResponse(client.EndPoint, $"Error|JSON 역직렬화 오류: {ex.Message}");
+                    return;
+                }
+
+                //client.Position = inputData.position; //서버상의 client의 위치 업데이트 
+
                 foreach (var c in room.Clients)
                 {
+
                     SendResponse(c.EndPoint, $"PlayerInput|{jsonData}");
-                    
+
                 }
             }
+        }
+
+        static void BroadcastAllRooms(object state)
+        {
+            lock (lockObj)
+            {
+                try
+                {
+                    foreach (var room in rooms.Values)
+                    {
+                        foreach (var client in room.Clients)
+                        {
+                            if (client.PlayerInput == null) continue;
+
+                            client.PlayerInput.action = "SyncPos";
+                            string jsonData = JsonConvert.SerializeObject(client.PlayerInput);
+
+                            foreach (var otherClient in room.Clients)
+                            {
+                                if (!otherClient.Equals(client))
+                                {
+                                    SendResponse(otherClient.EndPoint, $"Broadcast|{jsonData}");
+                                    Console.WriteLine($"위치동기화: {client.PlayerInput.playerId} 의 정보를 {otherClient.PlayerInput.playerId}에게로");
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("BroadcastAllRooms 예외 발생: " + ex.Message);
+                }
+            }
+          
         }
 
         static void SendResponse(IPEndPoint clientEP, string message)
@@ -182,8 +245,18 @@ namespace GameServer
     {
         public IPEndPoint EndPoint { get; set; } // 클라이언트의 IP와 포트
         public string RoomId { get; set; }       // 클라이언트가 속한 방 ID
+        //public Vector3 Position { get; set; }     // 클라이언트의 현재 위치
+                                                  // public int PlayerId { get; set; }        // 플레이어 ID (1 또는 2)
 
-       // public int PlayerId { get; set; }        // 플레이어 ID (1 또는 2)
+        public PlayerInputData PlayerInput { get; set;  }
+
+        public ClientInfo()
+        {
+            PlayerInput = new PlayerInputData();
+        }
+
+
+
     }
 
     public class Room
@@ -198,7 +271,41 @@ namespace GameServer
             Clients = new List<ClientInfo>();
         }
     }
+
+    public struct Vector3
+    {
+        public float x;
+        public float y;
+        public float z;
+
+        public Vector3(float X, float Y, float Z)
+        {
+            x = X;
+            y = Y;
+            z = Z;
+        }
+    }
+
+    // 클라이언트로부터 받은 입력 데이터 클래스
+    public class PlayerInputData
+    {
+        public int playerId { get; set; }          // 플레이어 ID
+        public string action { get; set; }         // 액션 (예: "MoveForward")
+        public Vector3 position { get; set; }      // 현재 위치
+        //public Vector3 MoveDirection { get; set; } // 이동 방향
+        //public float Speed { get; set; }           // 이동 속도
+        public float timestamp { get; set; }        // 클라이언트에서 보낸 시간 (밀리초)
+
+        public PlayerInputData()
+        {
+            playerId = 0;
+            action = "Idle";
+            position = new Vector3(0, 0, 0);
+            timestamp = 0f;
+        }
+    }       
 }
+
 
 
 

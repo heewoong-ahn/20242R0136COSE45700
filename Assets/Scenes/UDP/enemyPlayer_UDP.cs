@@ -285,6 +285,7 @@ public class enemyPlayer_UDP: MonoBehaviour
             string jsonData = UDPClient.Instance.inputQueue.Dequeue();
             PlayerInputData inputData = JsonUtility.FromJson<PlayerInputData>(jsonData);
             Debug.Log(inputData.action);
+            Debug.Log("Player ID: " + inputData.playerId);
 
             if (inputData.playerId != gameData.playerId)
             {
@@ -310,6 +311,10 @@ public class enemyPlayer_UDP: MonoBehaviour
                 StopBasic();
                 break;
 
+            case "SyncPos":
+                SyncPlayerPosition(inputData.position);
+                break;
+
                 /*case "MoveBackward":
                     MoveBackward();
                     break;*/
@@ -332,7 +337,14 @@ public class enemyPlayer_UDP: MonoBehaviour
             isMovingBackward = false;
         }
 
-        moveDirection = new Vector3(0, 0, -1);
+        if (gameData.playerId == 2)
+        {
+            moveDirection = new Vector3(0, 0, 1);
+        }
+        else
+        {
+            moveDirection = new Vector3(0, 0, -1);
+        }
         transform.position += moveDirection * speed * Time.deltaTime;
         Debug.Log($"moveDirection: {moveDirection}, speed: {speed}, deltaTime: {Time.deltaTime}");
 
@@ -348,7 +360,14 @@ public class enemyPlayer_UDP: MonoBehaviour
             isMovingForward = false;
         }
 
-        moveDirection = new Vector3(0, 0, 1);
+        if (gameData.playerId == 2)
+        {
+            moveDirection = new Vector3(0, 0, -1);
+        }
+        else
+        {
+            moveDirection = new Vector3(0, 0, 1);
+        }
         transform.position += moveDirection * speed * Time.deltaTime;
         Debug.Log($"moveDirection: {moveDirection}, speed: {speed}, deltaTime: {Time.deltaTime}");
     }
@@ -359,6 +378,12 @@ public class enemyPlayer_UDP: MonoBehaviour
         anim.SetBool("stepBackward", false);
         isMovingBackward = false; // 이동 상태를 활성화
         isMovingForward = false;
+    }
+
+    void SyncPlayerPosition(Vector3 syncedPosition)
+    {
+        Debug.Log("sync position called");
+        transform.position = syncedPosition;
     }
 
     private bool CanStartPunch()

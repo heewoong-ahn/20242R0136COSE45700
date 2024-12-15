@@ -131,6 +131,8 @@ public class player1Controller_UDP : MonoBehaviour
         lastRightKickTime = -rightKickTime;
         lastLeftKickTime = -leftKickTime;
         lastGuardTime = -guardTime;
+
+        SendInputToServer("Stop"); //각 player 시작 위치 고정.
     }
 
 
@@ -287,7 +289,8 @@ public class player1Controller_UDP : MonoBehaviour
             playerId = gameData.playerId,
             //roomId = gameData.roomId,
             action = action,
-            timestamp = Time.time
+            timestamp = Time.time,
+            position = transform.position,
         };
 
         Debug.Log("send to server data ready");
@@ -306,7 +309,8 @@ public class player1Controller_UDP : MonoBehaviour
             Debug.Log("Data received from Server");
             string jsonData = UDPClient.Instance.inputQueue.Dequeue();
             PlayerInputData inputData = JsonUtility.FromJson<PlayerInputData>(jsonData);
-            Debug.Log(inputData.action);
+            Debug.Log(inputData.action + "움직일 플레이어 ID: " + inputData.playerId);
+            Debug.Log("Player ID: " + inputData.playerId);
 
             if (inputData.playerId == gameData.playerId)
             {
@@ -336,6 +340,10 @@ public class player1Controller_UDP : MonoBehaviour
                 StopBasic();
                 break;
 
+            case "SyncPos":
+                SyncPlayerPosition(inputData.position);
+                break;
+
             /*case "MoveBackward":
                 MoveBackward();
                 break;*/
@@ -357,8 +365,15 @@ public class player1Controller_UDP : MonoBehaviour
             isMovingForward = true; // 이동 상태를 활성화
             isMovingBackward = false;
         }
-
-        moveDirection = new Vector3(0, 0, 1);
+        //enemyplayer라면 // 같은 script를 eneymy에 똑같이 적용했을때는 z축 거꾸로 움직임. 
+        if (gameData.playerId == 2)
+        {
+            moveDirection = new Vector3(0, 0, -1);
+        }
+        else
+        {
+            moveDirection = new Vector3(0, 0, 1);
+        }
         transform.position += moveDirection * speed * Time.deltaTime;
         Debug.Log($"moveDirection: {moveDirection}, speed: {speed}, deltaTime: {Time.deltaTime}");
 
@@ -374,7 +389,14 @@ public class player1Controller_UDP : MonoBehaviour
             isMovingForward = false; 
         }
 
-        moveDirection = new Vector3(0, 0, -1);
+        if (gameData.playerId == 2)
+        {
+            moveDirection = new Vector3(0, 0, 1);
+        }
+        else
+        {
+            moveDirection = new Vector3(0, 0, -1);
+        }
         transform.position += moveDirection * speed * Time.deltaTime;
         Debug.Log($"moveDirection: {moveDirection}, speed: {speed}, deltaTime: {Time.deltaTime}");
     }
@@ -385,6 +407,12 @@ public class player1Controller_UDP : MonoBehaviour
         anim.SetBool("stepBackward", false);
         isMovingBackward = false; // 이동 상태를 활성화
         isMovingForward = false;
+    }
+
+    void SyncPlayerPosition(Vector3 syncedPosition)
+    {
+        Debug.Log("sync position called");
+        transform.position = syncedPosition;
     }
 
     private bool CanStartPunch()

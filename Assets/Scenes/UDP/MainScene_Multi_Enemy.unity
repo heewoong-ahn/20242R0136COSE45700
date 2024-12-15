@@ -249,7 +249,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthSprites: []
   healthBarImage: {fileID: 24809354}
-  player: {fileID: 836338915}
+  player: {fileID: 0}
 --- !u!114 &24809354 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6593530906694048175, guid: 9f903bbde5e428a49bb33a0f3c3e40f6, type: 3}
@@ -748,7 +748,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dodgeSprites: []
   dodgeBarImage: {fileID: 323997129}
-  player: {fileID: 836338915}
+  player: {fileID: 0}
 --- !u!4 &334195406 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 475656654303912265, guid: 40a83cb90f2c9714ba1da7f161eaec0c, type: 3}
@@ -1915,7 +1915,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ee84c10432d7894d9b3c1cf519e51d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &836338915
+--- !u!95 &836338917 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 4562658151254974682, guid: 6208768e44f19c0448e626a4ca86be4a, type: 3}
+  m_PrefabInstance: {fileID: 6370046869041082589}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &836338918
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1924,7 +1929,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 505799274}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2e11952ebf657e34f9f67d8e82906c71, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f489710b51fc8f42bdd1b1c8414db16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gameData: {fileID: 11400000, guid: 2fd40ceca97a79c4aaaa445c629bb6c0, type: 2}
@@ -1932,7 +1937,6 @@ MonoBehaviour:
   curHealth: 55
   lastDodge: 0
   anim: {fileID: 836338917}
-  clock: {fileID: 0}
   speed: 2
   leftPunchScript: {fileID: 588142314}
   rightKickScript: {fileID: 689314587}
@@ -1944,7 +1948,6 @@ MonoBehaviour:
   mainCam: {fileID: 480593317}
   victoryCam: {fileID: 1910509457}
   endmenu: {fileID: 0}
-  middleBar: {fileID: 415641182}
   soundControllerScript: {fileID: 836338913}
   music: {fileID: 0}
   particle: {fileID: 953346750}
@@ -1954,12 +1957,6 @@ MonoBehaviour:
   dodgeLeft: {fileID: 1522353445}
   dodgeRight: {fileID: 768561476}
   winLight: {fileID: 2146005113}
-  isEnd: 0
---- !u!95 &836338917 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 4562658151254974682, guid: 6208768e44f19c0448e626a4ca86be4a, type: 3}
-  m_PrefabInstance: {fileID: 6370046869041082589}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &856635831
 GameObject:
   m_ObjectHideFlags: 0
@@ -2748,7 +2745,7 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 5253685325581341138, guid: 40a83cb90f2c9714ba1da7f161eaec0c, type: 3}
   m_PrefabInstance: {fileID: 1107647473}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1066200121
+--- !u!114 &1066200119
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2757,7 +2754,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1066200113}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f489710b51fc8f42bdd1b1c8414db16, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e11952ebf657e34f9f67d8e82906c71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gameData: {fileID: 11400000, guid: 2fd40ceca97a79c4aaaa445c629bb6c0, type: 2}
@@ -2765,6 +2762,7 @@ MonoBehaviour:
   curHealth: 55
   lastDodge: 0
   anim: {fileID: 1066200118}
+  clock: {fileID: 0}
   speed: 2
   leftPunchScript: {fileID: 1264275792}
   rightKickScript: {fileID: 199232501}
@@ -2776,6 +2774,7 @@ MonoBehaviour:
   mainCam: {fileID: 208004880}
   victoryCam: {fileID: 22272349}
   endmenu: {fileID: 0}
+  middleBar: {fileID: 415641182}
   soundControllerScript: {fileID: 1066200117}
   music: {fileID: 0}
   particle: {fileID: 1306597047}
@@ -2785,6 +2784,7 @@ MonoBehaviour:
   dodgeLeft: {fileID: 2003548879}
   dodgeRight: {fileID: 1577824850}
   winLight: {fileID: 772953118}
+  isEnd: 0
 --- !u!114 &1071090442 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2710649884282011884, guid: 6208768e44f19c0448e626a4ca86be4a, type: 3}
@@ -3099,7 +3099,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5963434794313375470, guid: 40a83cb90f2c9714ba1da7f161eaec0c, type: 3}
       insertIndex: 1
-      addedObject: {fileID: 1066200121}
+      addedObject: {fileID: 1066200119}
     - targetCorrespondingSourceObject: {fileID: 5963434794313375470, guid: 40a83cb90f2c9714ba1da7f161eaec0c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1066200117}
@@ -3289,7 +3289,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dodgeSprites: []
   dodgeBarImage: {fileID: 1182971254}
-  player: {fileID: 1066200121}
+  player: {fileID: 0}
 --- !u!114 &1264275792 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5430386234829840738, guid: 40a83cb90f2c9714ba1da7f161eaec0c, type: 3}
@@ -3508,7 +3508,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthSprites: []
   healthBarImage: {fileID: 1375768988}
-  player: {fileID: 1066200121}
+  player: {fileID: 0}
 --- !u!114 &1375768988 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4922571772616104045, guid: 9f903bbde5e428a49bb33a0f3c3e40f6, type: 3}
@@ -5202,7 +5202,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2859617002115640463, guid: 6208768e44f19c0448e626a4ca86be4a, type: 3}
       insertIndex: 3
-      addedObject: {fileID: 836338915}
+      addedObject: {fileID: 836338918}
   m_SourcePrefab: {fileID: 100100000, guid: 6208768e44f19c0448e626a4ca86be4a, type: 3}
 --- !u!1001 &6440954383042644237
 PrefabInstance:

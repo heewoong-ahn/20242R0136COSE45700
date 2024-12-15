@@ -126,7 +126,14 @@ public class UDPClient : MonoBehaviour
 
                 case "GameStart":
                     Debug.Log("게임이 시작되었습니다!");
-                    SceneManager.LoadScene("MainScene_Multi");
+                    if (gameData.playerId == 1) {
+                        SceneManager.LoadScene("MainScene_Multi");
+                    }
+                    else
+                    {
+                        SceneManager.LoadScene("MainScene_Multi_Enemy");
+                    }
+                    
                     // 게임 시작 로직 구현
                     break;
 
@@ -134,6 +141,12 @@ public class UDPClient : MonoBehaviour
                     Debug.Log("call player input function");
                     string jsonData = parts[1];
                     inputQueue.Enqueue(jsonData);
+                    break;
+
+                case "Broadcast":
+                    Debug.Log("player 위치를 broadcast받았습니다."); 
+                    string jsonDataPos = parts[1];
+                    inputQueue.Enqueue(jsonDataPos);
                     break;
 
                 case "Error":
