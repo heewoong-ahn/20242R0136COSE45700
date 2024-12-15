@@ -49,4 +49,18 @@ public class UnityMainThreadDispatcher : MonoBehaviour
             }
         }
     }
+
+    public void DestroySelf()
+    {
+        if (_instance == this)
+        {
+            Debug.Log("UnityMainThreadDispatcher 인스턴스가 파괴됩니다.");
+            _instance = null;
+            Destroy(gameObject); // GameObject와 MonoBehaviour 모두 파괴
+        }
+        else
+        {
+            Debug.LogWarning("DestroySelf 호출 시 현재 인스턴스와 _instance가 일치하지 않습니다.");
+        }
+    }
 }

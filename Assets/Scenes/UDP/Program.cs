@@ -16,6 +16,8 @@ namespace GameServer
         private static List<ClientInfo> clients = new List<ClientInfo>();
         private static int serverPort = 8080;
 
+        private static Timer broadcastTimer;
+
         static void Main(string[] args)
         {
             udpServer = new UdpClient(serverPort);
@@ -23,11 +25,12 @@ namespace GameServer
 
             Thread receiveThread = new Thread(ReceiveClients);
             receiveThread.Start();
+            StartBroadcastTimer();
 
             Console.WriteLine("종료하려면 Enter 키를 누르세요...");
             Console.ReadLine();
 
-            //broadcastTimer.Dispose();
+            broadcastTimer.Dispose();
             udpServer.Close();
         }
 
@@ -103,6 +106,20 @@ namespace GameServer
                         }
                         break;
 
+                    case "HealthSync":
+                        if (parts.Length >= 2)
+                        {
+                            int damage = int.Parse(parts[1]);
+                            HandleDamage(client, damage);
+                        }
+                        break;
+                    case "RoomDestroyed":
+                        if (parts.Length >= 1)
+                        {
+                            DestroyRoom(client);
+                        }
+                        break;
+
                     default:
                         SendResponse(client.EndPoint, "Error|알 수 없는 명령입니다.");
                         break;
@@ -110,6 +127,44 @@ namespace GameServer
             }
             
         }
+
+        static void DestroyRoom(ClientInfo client)
+        {
+            if (client.RoomId != null && rooms.ContainsKey(client.RoomId))
+            {
+                
+                    // broadcasting 중일 때 rooms에 대한 정보가 바뀌지 않도록 lock
+                   lock (lockObj)
+                   {
+
+
+
+                    clients.Remove(client);
+
+                    try
+                    {
+                        Room room = rooms[client.RoomId];
+                        StopRoomTimer(room);
+                        // 방 삭제
+                        rooms.Remove(client.RoomId);
+                        Console.WriteLine($"방 {client.RoomId}이(가) 삭제되었습니다.");
+                    }
+                    catch(Exception ex)
+                    {
+                        // 기타 예외 처리
+                        Console.WriteLine($"이미 방 삭제됐거나 삭제가 안되는 오류.: {ex.Message}");
+                    }
+
+
+
+                }
+            }
+           else
+            {
+                Console.WriteLine($"방 {client.RoomId}이(가) 존재하지 않습니다.");
+            }
+        }
+
 
         static void HandleCreateRoom(ClientInfo client, string roomId)
         {
@@ -120,7 +175,7 @@ namespace GameServer
                 rooms.Add(roomId, room);
                 client.RoomId = roomId;
                 client.PlayerInput.playerId = 1;
-                client.PlayerInput.position = new Vector3(-0.8517556f, 1.3f, -1.216699f);
+               // client.PlayerInput.position = new Vector3(-0.8517556f, 1.3f, -1.216699f);
                 // client.PlayerId = 1; //방을 만든 사람은 1 
                 Console.WriteLine($"{client.EndPoint}님이 방 {roomId}을 생성했습니다.");
 
@@ -132,7 +187,15 @@ namespace GameServer
             }
         }
 
-        private static Timer broadcastTimer;
+
+        static void StartBroadcastTimer()
+        {
+            if (broadcastTimer == null) // 타이머가 없으면 생성 및 시작
+            {
+                broadcastTimer = new Timer(BroadcastAllRooms, null, 0, 300); // 300ms 주기로 동기화
+                Console.WriteLine("동기화 타이머가 시작되었습니다.");
+            }
+        }
 
         static void HandleJoinRoom(ClientInfo client, string roomId)
         {
@@ -144,7 +207,7 @@ namespace GameServer
                     room.Clients.Add(client);
                     client.RoomId = roomId;
                     client.PlayerInput.playerId = 2;
-                    client.PlayerInput.position = new Vector3(-0.47f, 1.3f, 3f);
+                   // client.PlayerInput.position = new Vector3(-0.47f, 1.3f, 3f);
                     // client.PlayerId = 2; //방에 들어간 사람은 2
                     Console.WriteLine($"{client.EndPoint}님이 방 {roomId}에 참여했습니다.");
 
@@ -158,9 +221,13 @@ namespace GameServer
                             SendResponse(c.EndPoint, $"GameStart|{roomId}|게임을 시작합니다.");
                         }
                         // 게임 시작 후에 타이머 시작
-                        broadcastTimer = new Timer(BroadcastAllRooms, null, 3100, 100);
-                        Console.WriteLine("위치 동기화 브로드캐스트 시작.");
+                        //broadcastTimer = new Timer(BroadcastAllRooms, null, 3100, 300);
+                        //Console.WriteLine("위치 동기화 브로드캐스트 시작.");
+                        // 타이머 시작
+                        StartRoomTimer(room);
+
                     }
+
                 }
                 else
                 {
@@ -200,6 +267,22 @@ namespace GameServer
             }
         }
 
+        static void HandleDamage(ClientInfo client, int damage)
+        {
+            if (client.RoomId != null && rooms.ContainsKey(client.RoomId))
+            {
+                Room room = rooms[client.RoomId];
+
+                foreach (var c in room.Clients)
+                {
+
+                    SendResponse(c.EndPoint, $"HealthSync|{client.PlayerInput.playerId}|{damage}");
+
+                }
+            }
+             
+        }
+
         static void BroadcastAllRooms(object state)
         {
             lock (lockObj)
@@ -210,7 +293,7 @@ namespace GameServer
                     {
                         foreach (var client in room.Clients)
                         {
-                            if (client.PlayerInput == null) continue;
+                            if (client.PlayerInput.position.y == 0f) continue;
 
                             client.PlayerInput.action = "SyncPos";
                             string jsonData = JsonConvert.SerializeObject(client.PlayerInput);
@@ -239,7 +322,52 @@ namespace GameServer
             byte[] responseData = Encoding.UTF8.GetBytes(message);
             udpServer.Send(responseData, responseData.Length, clientEP);
         }
+
+        static void StartRoomTimer(Room room)
+        {
+            if (room.RoomTimer == null)
+            {
+                room.RoomTimer = new Timer(state =>
+                {
+                    
+                        if (room.TimeRemaining > 0)
+                        {
+                            room.TimeRemaining -= 1; // 1초씩 감소
+                            BroadcastRoomTime(room);
+                        }
+                        else
+                        {
+                            room.TimeRemaining = 0;
+                            StopRoomTimer(room);
+                            Console.WriteLine($"방 {room.RoomId}: 시간이 종료되었습니다.");
+                            // 여기서 게임 종료 처리 추가 가능
+                        }
+                    
+                }, null, 0, 1000); // 1초마다 실행
+            }
+        }
+
+        static void StopRoomTimer(Room room)
+        {
+            if (room.RoomTimer != null)
+            {
+                room.RoomTimer.Dispose();
+                room.RoomTimer = null;
+            }
+        }
+
+        static void BroadcastRoomTime(Room room)
+        {
+            foreach (var client in room.Clients)
+            {
+                SendResponse(client.EndPoint, $"TimerSync|{room.TimeRemaining}");
+            }
+        }
+
     }
+
+
+
 
     public class ClientInfo
     {
@@ -252,7 +380,7 @@ namespace GameServer
 
         public ClientInfo()
         {
-            PlayerInput = new PlayerInputData();
+            PlayerInput =  new PlayerInputData();
         }
 
 
@@ -264,11 +392,14 @@ namespace GameServer
         public string RoomId { get; set; }                 // 방 ID
         public List<ClientInfo> Clients { get; set; }      // 방에 참여한 클라이언트 목록
 
+        public Timer RoomTimer { get; set; }
+        public float TimeRemaining { get; set; } = 96f;
         //생성자
         public Room(string roomId)
         {
             RoomId = roomId;
             Clients = new List<ClientInfo>();
+            RoomTimer = null;
         }
     }
 
@@ -300,7 +431,7 @@ namespace GameServer
         {
             playerId = 0;
             action = "Idle";
-            position = new Vector3(0, 0, 0);
+            position = new Vector3(0f, 0f, 0f);
             timestamp = 0f;
         }
     }       

@@ -23,7 +23,7 @@ public class player1Controller_UDP : MonoBehaviour
     Rigidbody rigid;
     BoxCollider boxCollider;
     enemyPlayer_UDP player;
-    public TimeClock clock;
+    public TimeClock_UDP clock;
 
     float hAxis;
     Vector3 moveVec;
@@ -78,7 +78,8 @@ public class player1Controller_UDP : MonoBehaviour
     public GameObject middleBar;
 
     public sounds soundControllerScript;
-    public MusicController music;
+    public MusicController_UDP music;
+
 
     public ParticleSystem particle;
     public Light light;
@@ -104,8 +105,8 @@ public class player1Controller_UDP : MonoBehaviour
         isEnd = false;
         gFlag = false; 
         hitByUpperCut = false;
-        music = FindObjectOfType<MusicController>();
-        clock = FindObjectOfType<TimeClock>();
+        music = FindObjectOfType<MusicController_UDP>();
+        clock = FindObjectOfType<TimeClock_UDP>();
         endmenu = FindObjectOfType<EndMenuController>();
         victoryCam.gameObject.SetActive(false);
         player = GameObject.FindObjectOfType<enemyPlayer_UDP>();
@@ -132,7 +133,7 @@ public class player1Controller_UDP : MonoBehaviour
         lastLeftKickTime = -leftKickTime;
         lastGuardTime = -guardTime;
 
-        SendInputToServer("Stop"); //각 player 시작 위치 고정.
+        //SendInputToServer("MoveForward"); //각 player 시작 위치 고정.
     }
 
 
@@ -148,6 +149,7 @@ public class player1Controller_UDP : MonoBehaviour
 
         HandleLocalInput();
         ProcessReceivedInputs();
+        ProcessReceivedStatusInputs();
 
         /*timer -= Time.deltaTime;
         if(IsIdlePlaying())
@@ -274,10 +276,10 @@ public class player1Controller_UDP : MonoBehaviour
         {
             SendInputToServer("Stop");
         }
-        /*else if (Input.GetKey(KeyCode.A))
+        else if (Input.GetKeyDown(KeyCode.T) && !hitByUpperCut && !isEnd)
         {
-            SendInputToServer("MoveBackward");
-        }*/
+            SendInputToServer("RightPunch");
+        }
     }
 
 
@@ -299,6 +301,11 @@ public class player1Controller_UDP : MonoBehaviour
         UDPClient.Instance.SendMessageToServer($"PlayerInput|{jsonData}");
         Debug.Log("Data sent to server");
         Debug.Log($"큐 크기: {UDPClient.Instance.inputQueue.Count}");
+    }
+
+    void healthSync(int damage)
+    {
+        UDPClient.Instance.SendMessageToServer($"HealthSync|{damage}");
     }
 
     void ProcessReceivedInputs()
@@ -324,6 +331,26 @@ public class player1Controller_UDP : MonoBehaviour
         }
     }
 
+    void ProcessReceivedStatusInputs()
+    {
+        while (UDPClient.Instance.statusQueue.Count > 0)
+        {
+            string formattedHealth = UDPClient.Instance.statusQueue.Dequeue();
+            string[] parts = formattedHealth.Split('|');
+            int playerId = int.Parse(parts[0]);
+            int damage = int.Parse(parts[1]);
+
+            if (playerId == gameData.playerId)
+            {
+                getHitBasic(damage);
+            }
+            else if (playerId != gameData.playerId)
+            {
+                player.getHitBasic(damage);
+            }
+        }
+    }
+
     void ApplyInput(PlayerInputData inputData)
     {
         switch (inputData.action)
@@ -343,6 +370,11 @@ public class player1Controller_UDP : MonoBehaviour
             case "SyncPos":
                 SyncPlayerPosition(inputData.position);
                 break;
+
+            case "RightPunch":
+                RightPunchBasic();
+                break;
+                
 
             /*case "MoveBackward":
                 MoveBackward();
@@ -415,10 +447,30 @@ public class player1Controller_UDP : MonoBehaviour
         transform.position = syncedPosition;
     }
 
+    void RightPunchBasic()
+    {
+        if (Time.time - lastBasicPunchTime >= basicPunchTime && CanStartPunch())
+        {
+            leftPunchScript.Use();
+            anim.SetTrigger("basicPunch");
+            lastBasicPunchTime = Time.time;
+            leftPunchStartTime = Time.time;
+            anim.SetBool("rightPunch", false);
+            isRightPunchActive = false;
+        }
+    }
+
+    void getHitBasic(int damage)
+    {
+
+        ChangeHealth(damage);
+
+    }
     private bool CanStartPunch()
     {
         return !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsRightPunchAnimationPlaying() && !IsUpperCutAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsRightKickAnimationPlaying() && !IsUnderKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying();
     }
+
 
     private void MoveForward()
     {
@@ -580,6 +632,7 @@ public class player1Controller_UDP : MonoBehaviour
         curHealth += amount;
         // 체력이 0 이하로 떨어지지 않도록 함
         curHealth = Mathf.Clamp(curHealth, 0, maxHealth);
+        Debug.Log("red" + ": " + curHealth);
 
         // 체력이 0이 되면 플레이어 사망 처리
         if (curHealth <= 0)
@@ -601,11 +654,13 @@ public class player1Controller_UDP : MonoBehaviour
         winLight.enabled = true;
         isEnd = true;
         music.PlayWinnerMusic();
-        clock.EndOfGame();
+        //clock.EndOfGame();
         endmenu.WhenGameEnd();
         mainCam.gameObject.SetActive(false);
         victoryCam.gameObject.SetActive(true);
         anim.SetTrigger("isWin");
+        UDPClient.Instance.SendMessageToServer($"RoomDestroyed|");
+        UnityMainThreadDispatcher.Instance().DestroySelf();
     }
 
     public void Die0()
@@ -613,8 +668,10 @@ public class player1Controller_UDP : MonoBehaviour
         anim.SetTrigger("isLose");
         middleBar.SetActive(false);
         isEnd = true;
-        clock.EndOfGame();
+        //clock.EndOfGame();
         mainCam.gameObject.SetActive(false);
+        UDPClient.Instance.SendMessageToServer($"RoomDestroyed|");
+        UnityMainThreadDispatcher.Instance().DestroySelf();
     }
 
     IEnumerator SlowMotionWin()
@@ -634,6 +691,8 @@ public class player1Controller_UDP : MonoBehaviour
         mainCam.gameObject.SetActive(false);
         victoryCam.gameObject.SetActive(true);
         anim.SetTrigger("isWin");
+        UDPClient.Instance.SendMessageToServer($"RoomDestroyed|");
+        UnityMainThreadDispatcher.Instance().DestroySelf();
 
     }
 
@@ -654,7 +713,9 @@ public class player1Controller_UDP : MonoBehaviour
         isEnd = true;
         clock.EndOfGame();
         mainCam.gameObject.SetActive(false);
-        
+        UDPClient.Instance.SendMessageToServer($"RoomDestroyed|");
+        UnityMainThreadDispatcher.Instance().DestroySelf();
+
         // 플레이어 사망 처리 로직
         // 예를 들어, 게임 오버 화면 표시, 캐릭터 애니메이션 재생 등
         //SceneManager.LoadScene("EndingScene");
@@ -786,7 +847,8 @@ public class player1Controller_UDP : MonoBehaviour
                 cameraScript.punched();
                 soundControllerScript.playPunched();
 
-                ChangeHealth(-leftPunch.damage);
+                healthSync(-leftPunch.damage);
+                //ChangeHealth(-leftPunch.damage);
 
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -797,10 +859,11 @@ public class player1Controller_UDP : MonoBehaviour
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
-                else { 
-                ChangeHealth(-1);
-                soundControllerScript.guarded();
-                StartCoroutine(ActivateGuard(guard, 0.5f));
+                else {
+                    //ChangeHealth(-1);
+                    healthSync(-1);
+                    soundControllerScript.guarded();
+                    StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
             } 
         }

@@ -4,6 +4,7 @@ using Unity.VisualScripting;
 
 public class TimeClock_UDP : MonoBehaviour
 {
+    public GameData gameData;
     public TextMeshProUGUI timerText;
     private float timeRemaining = 90; // 타이머 시작 시간 (초)
     private bool timerStarted = false;
@@ -28,16 +29,31 @@ public class TimeClock_UDP : MonoBehaviour
 
     void Update()   
     {
+        ProcessReceivedTimeInputs();
+
         if (timerStarted && timeRemaining > 0 && gameEnd == false)
         {
-            timeRemaining -= Time.deltaTime;
+            //timeRemaining -= Time.deltaTime;
+            timeRemaining = gameData.gameTime;
             UpdateTimerDisplay();
         }
         if(timeRemaining <= 0 && gameEnd == false)
         {
             EndOfTime();
+            gameEnd = true;
+        }
+
+        
+    }
+
+    void ProcessReceivedTimeInputs()
+    {
+        while (UDPClient.Instance.timeQueue.Count > 0)
+        {
+            gameData.gameTime = float.Parse(UDPClient.Instance.timeQueue.Dequeue());
         }
     }
+
     void EndOfTime()
     {
         //Debug.Log(gameEnd);

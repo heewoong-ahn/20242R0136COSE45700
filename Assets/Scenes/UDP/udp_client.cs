@@ -24,6 +24,8 @@ public class UDPClient : MonoBehaviour
     public GameData gameData;
 
     public Queue<string> inputQueue = new Queue<string>(); //action들을 넣기 위함. 
+    public Queue<string> statusQueue = new Queue<string>(); //playerInput 형식의 데이터가 아닌 데이터를 처리하기 위함. 
+    public Queue<string> timeQueue = new Queue<string>(); //playerInput 형식의 데이터가 아닌 데이터를 처리하기 위함.
 
     void Awake()
     {
@@ -147,6 +149,18 @@ public class UDPClient : MonoBehaviour
                     Debug.Log("player 위치를 broadcast받았습니다."); 
                     string jsonDataPos = parts[1];
                     inputQueue.Enqueue(jsonDataPos);
+                    break;
+
+                case "HealthSync":
+                    string playerId = parts[1];
+                    string damage = parts[2];
+                    string formattedHealth = $"{playerId}|{damage}";
+                    statusQueue.Enqueue(formattedHealth);
+                    break;
+
+                case "TimerSync":
+                    string serverTime = parts[1];
+                    timeQueue.Enqueue(serverTime);
                     break;
 
                 case "Error":

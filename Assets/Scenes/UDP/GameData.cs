@@ -7,5 +7,5 @@ using UnityEngine;
 public class GameData : ScriptableObject
 {
     public int playerId;
-    //public string roomId;
+    public float gameTime;//public string roomId;
 }

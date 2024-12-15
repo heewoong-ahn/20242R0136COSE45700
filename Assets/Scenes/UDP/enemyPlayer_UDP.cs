@@ -68,7 +68,7 @@ public class enemyPlayer_UDP: MonoBehaviour
     public EndMenuController endmenu;
 
     public sounds soundControllerScript;
-    public MusicController music;
+    public MusicController_UDP music;
 
     public ParticleSystem particle;
     public Light light; 
@@ -90,7 +90,7 @@ public class enemyPlayer_UDP: MonoBehaviour
         isEnd = false;
         gFlag = false;
         hitByUpperCut = false;
-        music = FindObjectOfType<MusicController>();
+        music = FindObjectOfType<MusicController_UDP>();
         endmenu = FindObjectOfType<EndMenuController>();
         victoryCam.gameObject.SetActive(false);
         player = GameObject.FindObjectOfType<player1Controller_UDP>();
@@ -115,6 +115,8 @@ public class enemyPlayer_UDP: MonoBehaviour
         lastRightKickTime = -rightKickTime;
         lastLeftKickTime = -leftKickTime;
         lastGuardTime = -guardTime;
+
+       // SendInputToServer("MoveForward");
     }
 
     // Update is called once per frame
@@ -276,6 +278,11 @@ public class enemyPlayer_UDP: MonoBehaviour
         Debug.Log($"큐 크기: {UDPClient.Instance.inputQueue.Count}");
     }
 
+  /*  void healthSync(int damage)
+    {
+        UDPClient.Instance.SendMessageToServer($"HealthSync|{damage}");
+    }*/
+
     void ProcessReceivedInputs()
     {
         //Debug.Log("receivedData and player function called");
@@ -295,6 +302,7 @@ public class enemyPlayer_UDP: MonoBehaviour
         }
     }
 
+
     public void ApplyInput(PlayerInputData inputData)
     {
         switch (inputData.action)
@@ -313,6 +321,9 @@ public class enemyPlayer_UDP: MonoBehaviour
 
             case "SyncPos":
                 SyncPlayerPosition(inputData.position);
+                break;
+            case "RightPunch":
+                RightPunchBasic();
                 break;
 
                 /*case "MoveBackward":
@@ -384,6 +395,26 @@ public class enemyPlayer_UDP: MonoBehaviour
     {
         Debug.Log("sync position called");
         transform.position = syncedPosition;
+    }
+
+    void RightPunchBasic()
+    {
+        if (Time.time - lastBasicPunchTime >= basicPunchTime && CanStartPunch())
+        {
+            leftPunchScript.Use();
+            anim.SetTrigger("basicPunch");
+            lastBasicPunchTime = Time.time;
+            leftPunchStartTime = Time.time;
+            anim.SetBool("rightPunch", false);
+            isRightPunchActive = false;
+        }
+    }
+
+    public void getHitBasic(int damage)
+    {
+
+        ChangeHealth(damage);
+
     }
 
     private bool CanStartPunch()
@@ -548,7 +579,7 @@ public class enemyPlayer_UDP: MonoBehaviour
         curHealth += amount;
         // 체력이 0 이하로 떨어지지 않도록 함
         curHealth = Mathf.Clamp(curHealth, 0, maxHealth);
-
+        Debug.Log("yellow" + ": " + curHealth);
         // 체력이 0이 되면 플레이어 사망 처리
         if (curHealth <= 0)
         {
@@ -749,7 +780,8 @@ public class enemyPlayer_UDP: MonoBehaviour
                 cameraScript.punched();
                 soundControllerScript.playPunched();
 
-                ChangeHealth(-leftPunch.damage);
+                //healthSync(-leftPunch.damage);
+                //ChangeHealth(-leftPunch.damage); //enemy는 따로 서버에 요청을 보내지 않는다. 
 
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -762,7 +794,8 @@ public class enemyPlayer_UDP: MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                    //healthSync(-leftPunch.damage);
+                    //ChangeHealth(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }

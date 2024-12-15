@@ -76,7 +76,7 @@ public class EndMenuController_UDP : MonoBehaviour
         switch (selectedIndex)
         {
             case 0: // Start
-                SceneManager.LoadScene("MainScene");
+                SceneManager.LoadScene("roomScene");
                 break;
             case 1: // Settings, Scene 대신 Dialog로 바꾸거나 삭제할 생각 중
                 SceneManager.LoadScene("StartScene");
