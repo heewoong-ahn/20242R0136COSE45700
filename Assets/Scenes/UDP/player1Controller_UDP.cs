@@ -151,18 +151,20 @@ public class player1Controller_UDP : MonoBehaviour
         ProcessReceivedInputs();
         ProcessReceivedStatusInputs();
 
-        /*timer -= Time.deltaTime;
-        if(IsIdlePlaying())
+        if (IsIdlePlaying())
         {
             hitByUpperCut = false;
             anim.SetBool("hitByUpperCut", false);
         }
-        if(IsLying())
+        if (IsLying())
         {
             hitByUpperCut = true;
             anim.SetBool("hitByUpperCut", true);
         }
 
+
+        /*timer -= Time.deltaTime;
+       
         if (Input.GetKey(KeyCode.D) && !hitByUpperCut && !isEnd)
         {
             MoveForward();
@@ -280,6 +282,19 @@ public class player1Controller_UDP : MonoBehaviour
         {
             SendInputToServer("RightPunch");
         }
+        else if (Input.GetKeyDown(KeyCode.Y) && !hitByUpperCut && !isEnd)
+        {
+            SendInputToServer("FirstKick");
+        }
+        else if (Input.GetKeyDown(KeyCode.U) && !isEnd && !hitByUpperCut && !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsRightKickAnimationPlaying() && !IsUnderKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying())
+        {
+            SendInputToServer("UnderKick");
+            Debug.Log("UnderKickPressed");
+        }
+        else if (Input.GetKeyDown(KeyCode.G) && !isEnd && !hitByUpperCut && Time.time - lastGuardTime >= guardTime && !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsRightKickAnimationPlaying() && !IsUnderKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying())
+        {
+            SendInputToServer("Guard");
+        }
     }
 
 
@@ -339,6 +354,7 @@ public class player1Controller_UDP : MonoBehaviour
             string[] parts = formattedHealth.Split('|');
             int playerId = int.Parse(parts[0]);
             int damage = int.Parse(parts[1]);
+            Debug.Log(playerId + damage);
 
             if (playerId == gameData.playerId)
             {
@@ -374,6 +390,20 @@ public class player1Controller_UDP : MonoBehaviour
             case "RightPunch":
                 RightPunchBasic();
                 break;
+
+            case "FirstKick":
+                FirstKickBasic();
+                break;
+
+            case "UnderKick":
+                UnderKickBasic();
+                Debug.Log("underkickBasic function called");
+                break;
+
+            case "Guard":
+                GuardBasic();
+                break;
+
                 
 
             /*case "MoveBackward":
@@ -458,6 +488,77 @@ public class player1Controller_UDP : MonoBehaviour
             anim.SetBool("rightPunch", false);
             isRightPunchActive = false;
         }
+        else if (!isRightPunchActive && Time.time - leftPunchStartTime > basicPunchTime - 0.3f && Time.time - leftPunchStartTime < basicPunchTime)
+        {
+            anim.SetBool("rightPunch", true);
+            rightPunchScript.Use();
+            rightPunchStartTime = Time.time;
+            isRightPunchActive = true;
+            isUpperCutActive = false;
+            StartCoroutine(SetRightPunchFalseAfterAnimation()); // 코루틴 호출
+        }
+        else if (!isUpperCutActive && Time.time - rightPunchStartTime > rightPunchTime - 0.3f && Time.time - rightPunchStartTime < rightPunchTime)
+        {
+            anim.SetBool("upperCut", true);
+            upperCutScript.Use();
+            isUpperCutActive = true;
+            StartCoroutine(SetUpperCutFalseAfterAnimation());
+        }
+    }
+
+    IEnumerator SetRightPunchFalseAfterAnimation()
+    {
+        yield return new WaitForSeconds(rightPunchTime); // 후속 펀치 애니메이션의 지속 시간
+        anim.SetBool("rightPunch", false);
+    }
+
+    IEnumerator SetUpperCutFalseAfterAnimation()
+    {
+        yield return new WaitForSeconds(upperCutTime);
+        anim.SetBool("upperCut", false);
+    }
+
+    void FirstKickBasic()
+    {
+        if (Time.time - lastLeftKickTime >= leftKickTime && CanStartPunch())
+        {
+            leftKickScript.Use();
+            anim.SetTrigger("leftKick");
+            lastLeftKickTime = Time.time;
+            leftKickStartTime = Time.time;
+            anim.SetBool("rightKick", false);
+            isRightKickActive = false;
+        }
+        else if (!isRightKickActive && Time.time - leftKickStartTime > leftKickTime - 0.3f && Time.time - leftKickStartTime < leftKickTime)
+        {
+            anim.SetBool("rightKick", true);
+            rightKickScript.Use();
+            rightKickStartTime = Time.time;
+            isRightKickActive = true;
+            StartCoroutine(SetRightKickFalseAfterAnimation()); // 코루틴 호출
+        }
+    }
+
+
+    IEnumerator SetRightKickFalseAfterAnimation()
+    {
+        yield return new WaitForSeconds(rightKickTime); // 후속 펀치 애니메이션의 지속 시간
+        anim.SetBool("rightKick", false);
+    }
+
+    void UnderKickBasic()
+    {
+        underKickScript.Use();
+        anim.SetTrigger("underKick");
+        Debug.Log("anim underkick action");
+    }
+
+    void GuardBasic()
+    {
+        gFlag = true;
+        StartCoroutine(ActivateGuard(0.3f));
+        anim.SetTrigger("guard");
+        lastGuardTime = Time.time;
     }
 
     void getHitBasic(int damage)
@@ -880,7 +981,8 @@ public class player1Controller_UDP : MonoBehaviour
                 cameraScript.punched();
                 soundControllerScript.playPunched();
 
-                ChangeHealth(-rightPunch.damage);
+                //ChangeHealth(-rightPunch.damage);
+                healthSync(-rightPunch.damage);
 
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -894,7 +996,8 @@ public class player1Controller_UDP : MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                    //ChangeHealth(-1);
+                    healthSync(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
@@ -912,7 +1015,8 @@ public class player1Controller_UDP : MonoBehaviour
                 cameraScript.uppered();
                 soundControllerScript.playUppered();
 
-                ChangeHealth(-upperCut.damage);
+                //ChangeHealth(-upperCut.damage);
+                healthSync(-upperCut.damage);
 
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -926,15 +1030,17 @@ public class player1Controller_UDP : MonoBehaviour
             //when not guarded
             if (!gFlag && !hitByUpperCut)
             { 
-            anim.SetTrigger("kicked");
+                anim.SetTrigger("kicked");
 
-            cameraScript.kicked();
-            soundControllerScript.playKicked();
+                cameraScript.kicked();
+                soundControllerScript.playKicked();
 
-            
-            ChangeHealth(-rightKick.damage);
 
-            StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
+                //ChangeHealth(-rightKick.damage);
+                healthSync(-rightKick.damage);
+                Debug.Log("rightkicked by enemy" + rightKick.damage);
+
+                StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
             else if(gFlag)
             {
@@ -945,7 +1051,8 @@ public class player1Controller_UDP : MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                    //ChangeHealth(-1);
+                    healthSync(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
@@ -961,15 +1068,15 @@ public class player1Controller_UDP : MonoBehaviour
             //when not guarded
             if (!gFlag && !hitByUpperCut)
             { 
-            anim.SetTrigger("kicked");
+                anim.SetTrigger("kicked");
 
-            cameraScript.kicked();
-            soundControllerScript.playKicked();
+                cameraScript.kicked();
+                soundControllerScript.playKicked();
 
-            
-            ChangeHealth(-leftKick.damage);
+                healthSync(-leftKick.damage);
+                //ChangeHealth(-leftKick.damage);
 
-            StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
+                StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
             else if(gFlag)
             {
@@ -980,7 +1087,8 @@ public class player1Controller_UDP : MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                    //ChangeHealth(-1);
+                    healthSync(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
@@ -996,7 +1104,8 @@ public class player1Controller_UDP : MonoBehaviour
             //when not guarded
             if (!hitByUpperCut)
             {
-                ChangeHealth(-underKick.damage);
+                //ChangeHealth(-underKick.damage);
+                healthSync(-underKick.damage);
                 cameraScript.kicked();
                 soundControllerScript.playKicked();
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));

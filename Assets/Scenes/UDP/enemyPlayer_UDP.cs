@@ -126,116 +126,118 @@ public class enemyPlayer_UDP: MonoBehaviour
         //HandleLocalInput(); //eneyplayer는 동작을 서버에서만 받음.
         //ProcessReceivedInputs();
 
-       /* timer -= Time.deltaTime;
-        if(IsIdlePlaying())
+        if (IsIdlePlaying())
         {
             hitByUpperCut = false;
             anim.SetBool("hitByUpperCut", false);
         }
-        if(IsLying())
+        if (IsLying())
         {
             hitByUpperCut = true;
             anim.SetBool("hitByUpperCut", true);
         }
 
-        
-        if (Input.GetKey(KeyCode.LeftArrow) && !hitByUpperCut && !isEnd)
-        {
-            MoveForward();
-        }
-        else if(Input.GetKey(KeyCode.RightArrow) && !hitByUpperCut && !isEnd)
-        {
-            MoveBackward();       
-        }
-        else
-        {
-            anim.SetBool("stepForward", false);
-            anim.SetBool("stepBackward", false);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Keypad4) && !hitByUpperCut && !isEnd)
-        {
-            if (Time.time - lastBasicPunchTime >= basicPunchTime && CanStartPunch())
-            {
-                leftPunchScript.Use();
-                anim.SetTrigger("basicPunch");
-                lastBasicPunchTime = Time.time; 
-                leftPunchStartTime = Time.time;
-                anim.SetBool("rightPunch", false);
-                isRightPunchActive = false;
-            }
-            else if (!isRightPunchActive && Time.time - leftPunchStartTime > basicPunchTime - 0.3f && Time.time - leftPunchStartTime < basicPunchTime)
-            {
-                anim.SetBool("rightPunch", true);
-                rightPunchScript.Use();
-                rightPunchStartTime = Time.time;
-                isRightPunchActive = true;
-                isUpperCutActive = false;
-                StartCoroutine(SetRightPunchFalseAfterAnimation()); // 코루틴 호출
-            }
-            else if (!isUpperCutActive && Time.time - rightPunchStartTime > rightPunchTime - 0.3f && Time.time - rightPunchStartTime < rightPunchTime)
-            {
-                anim.SetBool("upperCut", true);
-                upperCutScript.Use();
-                isUpperCutActive = true;
-                StartCoroutine(SetUpperCutFalseAfterAnimation());
-            }
-        }
-
-        IEnumerator SetRightPunchFalseAfterAnimation()
-        {
-            yield return new WaitForSeconds(rightPunchTime); // 후속 펀치 애니메이션의 지속 시간
-            anim.SetBool("rightPunch", false);
-        }
-
-        IEnumerator SetUpperCutFalseAfterAnimation()
-        {
-            yield return new WaitForSeconds(upperCutTime);
-            anim.SetBool("upperCut", false);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Keypad5) && !hitByUpperCut && !isEnd)
-        {
-            if (Time.time - lastLeftKickTime >= leftKickTime && CanStartPunch())
-            {
-                leftKickScript.Use();
-                anim.SetTrigger("leftKick");
-                lastLeftKickTime = Time.time; 
-                leftKickStartTime = Time.time;
-                anim.SetBool("rightKick", false);
-                isRightKickActive = false;
-            }
-            else if (!isRightKickActive && Time.time - leftKickStartTime > leftKickTime - 0.3f && Time.time - leftKickStartTime < leftKickTime)
-            {
-                anim.SetBool("rightKick", true);
-                rightKickScript.Use();
-                rightKickStartTime = Time.time;
-                isRightKickActive = true;
-                StartCoroutine(SetRightKickFalseAfterAnimation()); // 코루틴 호출
-            }
-        }
-
-        IEnumerator SetRightKickFalseAfterAnimation()
-        {
-            yield return new WaitForSeconds(rightKickTime); // 후속 펀치 애니메이션의 지속 시간
-            anim.SetBool("rightKick", false);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Keypad6) && !isEnd && !hitByUpperCut && !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsRightKickAnimationPlaying() && !IsUnderKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying())
-        {
-            underKickScript.Use();
-            anim.SetTrigger("underKick");
-        }
+        /* timer -= Time.deltaTime;
 
 
-        if (Input.GetKeyDown(KeyCode.Keypad1) && !isEnd && !hitByUpperCut && Time.time - lastGuardTime >= guardTime && !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsUnderKickAnimationPlaying()  && !IsRightKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying())
-        {
-            *//*rightKickScript.Use();*//*
-            gFlag = true;
-            StartCoroutine(ActivateGuard(0.3f));
-            anim.SetTrigger("guard");
-            lastGuardTime = Time.time;
-        }*/
+
+         if (Input.GetKey(KeyCode.LeftArrow) && !hitByUpperCut && !isEnd)
+         {
+             MoveForward();
+         }
+         else if(Input.GetKey(KeyCode.RightArrow) && !hitByUpperCut && !isEnd)
+         {
+             MoveBackward();       
+         }
+         else
+         {
+             anim.SetBool("stepForward", false);
+             anim.SetBool("stepBackward", false);
+         }
+
+         if (Input.GetKeyDown(KeyCode.Keypad4) && !hitByUpperCut && !isEnd)
+         {
+             if (Time.time - lastBasicPunchTime >= basicPunchTime && CanStartPunch())
+             {
+                 leftPunchScript.Use();
+                 anim.SetTrigger("basicPunch");
+                 lastBasicPunchTime = Time.time; 
+                 leftPunchStartTime = Time.time;
+                 anim.SetBool("rightPunch", false);
+                 isRightPunchActive = false;
+             }
+             else if (!isRightPunchActive && Time.time - leftPunchStartTime > basicPunchTime - 0.3f && Time.time - leftPunchStartTime < basicPunchTime)
+             {
+                 anim.SetBool("rightPunch", true);
+                 rightPunchScript.Use();
+                 rightPunchStartTime = Time.time;
+                 isRightPunchActive = true;
+                 isUpperCutActive = false;
+                 StartCoroutine(SetRightPunchFalseAfterAnimation()); // 코루틴 호출
+             }
+             else if (!isUpperCutActive && Time.time - rightPunchStartTime > rightPunchTime - 0.3f && Time.time - rightPunchStartTime < rightPunchTime)
+             {
+                 anim.SetBool("upperCut", true);
+                 upperCutScript.Use();
+                 isUpperCutActive = true;
+                 StartCoroutine(SetUpperCutFalseAfterAnimation());
+             }
+         }
+
+         IEnumerator SetRightPunchFalseAfterAnimation()
+         {
+             yield return new WaitForSeconds(rightPunchTime); // 후속 펀치 애니메이션의 지속 시간
+             anim.SetBool("rightPunch", false);
+         }
+
+         IEnumerator SetUpperCutFalseAfterAnimation()
+         {
+             yield return new WaitForSeconds(upperCutTime);
+             anim.SetBool("upperCut", false);
+         }
+
+         if (Input.GetKeyDown(KeyCode.Keypad5) && !hitByUpperCut && !isEnd)
+         {
+             if (Time.time - lastLeftKickTime >= leftKickTime && CanStartPunch())
+             {
+                 leftKickScript.Use();
+                 anim.SetTrigger("leftKick");
+                 lastLeftKickTime = Time.time; 
+                 leftKickStartTime = Time.time;
+                 anim.SetBool("rightKick", false);
+                 isRightKickActive = false;
+             }
+             else if (!isRightKickActive && Time.time - leftKickStartTime > leftKickTime - 0.3f && Time.time - leftKickStartTime < leftKickTime)
+             {
+                 anim.SetBool("rightKick", true);
+                 rightKickScript.Use();
+                 rightKickStartTime = Time.time;
+                 isRightKickActive = true;
+                 StartCoroutine(SetRightKickFalseAfterAnimation()); // 코루틴 호출
+             }
+         }
+
+         IEnumerator SetRightKickFalseAfterAnimation()
+         {
+             yield return new WaitForSeconds(rightKickTime); // 후속 펀치 애니메이션의 지속 시간
+             anim.SetBool("rightKick", false);
+         }
+
+         if (Input.GetKeyDown(KeyCode.Keypad6) && !isEnd && !hitByUpperCut && !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsRightKickAnimationPlaying() && !IsUnderKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying())
+         {
+             underKickScript.Use();
+             anim.SetTrigger("underKick");
+         }
+
+
+         if (Input.GetKeyDown(KeyCode.Keypad1) && !isEnd && !hitByUpperCut && Time.time - lastGuardTime >= guardTime && !IsGuardAnimationPlaying() && !IsBasicPunchAnimationPlaying() && !IsLeftKickAnimationPlaying() && !IsUnderKickAnimationPlaying()  && !IsRightKickAnimationPlaying() && !IsBasicPunchedAnimationPlaying() && !IsKickedAnimationPlaying() && !IsUnderKickedAnimationPlaying())
+         {
+             *//*rightKickScript.Use();*//*
+             gFlag = true;
+             StartCoroutine(ActivateGuard(0.3f));
+             anim.SetTrigger("guard");
+             lastGuardTime = Time.time;
+         }*/
     }
 
  /*   void HandleLocalInput()
@@ -326,6 +328,18 @@ public class enemyPlayer_UDP: MonoBehaviour
                 RightPunchBasic();
                 break;
 
+            case "FirstKick":
+                FirstKickBasic();
+                break;
+
+            case "UnderKick":
+                UnderKickBasic();
+                break;
+
+            case "Guard":
+                GuardBasic();
+                break;
+
                 /*case "MoveBackward":
                     MoveBackward();
                     break;*/
@@ -408,6 +422,76 @@ public class enemyPlayer_UDP: MonoBehaviour
             anim.SetBool("rightPunch", false);
             isRightPunchActive = false;
         }
+        else if (!isRightPunchActive && Time.time - leftPunchStartTime > basicPunchTime - 0.3f && Time.time - leftPunchStartTime < basicPunchTime)
+        {
+            anim.SetBool("rightPunch", true);
+            rightPunchScript.Use();
+            rightPunchStartTime = Time.time;
+            isRightPunchActive = true;
+            isUpperCutActive = false;
+            StartCoroutine(SetRightPunchFalseAfterAnimation()); // 코루틴 호출
+        }
+        else if (!isUpperCutActive && Time.time - rightPunchStartTime > rightPunchTime - 0.3f && Time.time - rightPunchStartTime < rightPunchTime)
+        {
+            anim.SetBool("upperCut", true);
+            upperCutScript.Use();
+            isUpperCutActive = true;
+            StartCoroutine(SetUpperCutFalseAfterAnimation());
+        }
+    }
+
+    IEnumerator SetRightPunchFalseAfterAnimation()
+    {
+        yield return new WaitForSeconds(rightPunchTime); // 후속 펀치 애니메이션의 지속 시간
+        anim.SetBool("rightPunch", false);
+    }
+
+    IEnumerator SetUpperCutFalseAfterAnimation()
+    {
+        yield return new WaitForSeconds(upperCutTime);
+        anim.SetBool("upperCut", false);
+    }
+
+    void FirstKickBasic()
+    {
+        if (Time.time - lastLeftKickTime >= leftKickTime && CanStartPunch())
+        {
+            leftKickScript.Use();
+            anim.SetTrigger("leftKick");
+            lastLeftKickTime = Time.time;
+            leftKickStartTime = Time.time;
+            anim.SetBool("rightKick", false);
+            isRightKickActive = false;
+        }
+        else if (!isRightKickActive && Time.time - leftKickStartTime > leftKickTime - 0.3f && Time.time - leftKickStartTime < leftKickTime)
+        {
+            anim.SetBool("rightKick", true);
+            rightKickScript.Use();
+            rightKickStartTime = Time.time;
+            isRightKickActive = true;
+            StartCoroutine(SetRightKickFalseAfterAnimation()); // 코루틴 호출
+        }
+    }
+
+
+    IEnumerator SetRightKickFalseAfterAnimation()
+    {
+        yield return new WaitForSeconds(rightKickTime); // 후속 펀치 애니메이션의 지속 시간
+        anim.SetBool("rightKick", false);
+    }
+
+    void UnderKickBasic()
+    {
+        underKickScript.Use();
+        anim.SetTrigger("underKick");
+    }
+
+    void GuardBasic()
+    {
+        gFlag = true;
+        StartCoroutine(ActivateGuard(0.3f));
+        anim.SetTrigger("guard");
+        lastGuardTime = Time.time;
     }
 
     public void getHitBasic(int damage)
@@ -813,7 +897,7 @@ public class enemyPlayer_UDP: MonoBehaviour
                 cameraScript.punched();
                 soundControllerScript.playPunched();
 
-                ChangeHealth(-rightPunch.damage);
+                //ChangeHealth(-rightPunch.damage);
 
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -826,7 +910,7 @@ public class enemyPlayer_UDP: MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                   // ChangeHealth(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
@@ -844,7 +928,7 @@ public class enemyPlayer_UDP: MonoBehaviour
                 cameraScript.uppered();
                 soundControllerScript.playUppered();
 
-                ChangeHealth(-upperCut.damage);
+               // ChangeHealth(-upperCut.damage);
 
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -863,7 +947,7 @@ public class enemyPlayer_UDP: MonoBehaviour
             soundControllerScript.playKicked();
 
             
-            ChangeHealth(-rightKick.damage);
+            //ChangeHealth(-rightKick.damage);
 
             StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -876,7 +960,7 @@ public class enemyPlayer_UDP: MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                    //ChangeHealth(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
@@ -896,7 +980,7 @@ public class enemyPlayer_UDP: MonoBehaviour
             soundControllerScript.playKicked();
 
             
-            ChangeHealth(-leftKick.damage);
+            //ChangeHealth(-leftKick.damage);
 
             StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
             }
@@ -909,7 +993,7 @@ public class enemyPlayer_UDP: MonoBehaviour
                 }
                 else
                 {
-                    ChangeHealth(-1);
+                    //ChangeHealth(-1);
                     soundControllerScript.guarded();
                     StartCoroutine(ActivateGuard(guard, 0.5f));
                 }
@@ -924,7 +1008,7 @@ public class enemyPlayer_UDP: MonoBehaviour
             //when not guarded
             if (!hitByUpperCut)
             {
-                ChangeHealth(-underKick.damage);
+                //ChangeHealth(-underKick.damage);
                 cameraScript.kicked();
                 soundControllerScript.playKicked();
                 StartCoroutine(ActivateParticleAndLight(particle, light, 0.3f));
