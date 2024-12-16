@@ -18,6 +18,9 @@ namespace GameServer
 
         private static Timer broadcastTimer;
 
+        static object lockObj = new object(); //room, client
+
+
         static void Main(string[] args)
         {
             udpServer = new UdpClient(serverPort);
@@ -31,6 +34,8 @@ namespace GameServer
             Console.ReadLine();
 
             broadcastTimer.Dispose();
+    
+            
             udpServer.Close();
         }
 
@@ -57,7 +62,8 @@ namespace GameServer
             }
         }
 
-        static object lockObj = new object();
+       
+
         static void HandleMessage(string message, IPEndPoint clientEP)
         {
             // 메시지를 '|'로 분리하여 명령과 데이터를 추출
@@ -134,8 +140,9 @@ namespace GameServer
             {
                 
                     // broadcasting 중일 때 rooms에 대한 정보가 바뀌지 않도록 lock
-                   lock (lockObj)
-                   {
+                    //이미 destroyroom을 호출하는 handle message에서 lock을 걸었기 때문에 필요없음. 
+                   //lock (lockObj)
+                   //{
 
 
 
@@ -152,12 +159,12 @@ namespace GameServer
                     catch(Exception ex)
                     {
                         // 기타 예외 처리
-                        Console.WriteLine($"이미 방 삭제됐거나 삭제가 안되는 오류.: {ex.Message}");
+                        Console.WriteLine($"이미 방 삭제됐거나 삭제가 안되는 오류.");
                     }
 
 
 
-                }
+               // }
             }
            else
             {
@@ -175,8 +182,6 @@ namespace GameServer
                 rooms.Add(roomId, room);
                 client.RoomId = roomId;
                 client.PlayerInput.playerId = 1;
-               // client.PlayerInput.position = new Vector3(-0.8517556f, 1.3f, -1.216699f);
-                // client.PlayerId = 1; //방을 만든 사람은 1 
                 Console.WriteLine($"{client.EndPoint}님이 방 {roomId}을 생성했습니다.");
 
                 SendResponse(client.EndPoint, $"RoomCreated|{roomId}|방이 생성되었습니다.");
@@ -190,11 +195,14 @@ namespace GameServer
 
         static void StartBroadcastTimer()
         {
-            if (broadcastTimer == null) // 타이머가 없으면 생성 및 시작
-            {
-                broadcastTimer = new Timer(BroadcastAllRooms, null, 0, 300); // 300ms 주기로 동기화
-                Console.WriteLine("동기화 타이머가 시작되었습니다.");
-            }
+            
+                if (broadcastTimer == null) // 타이머가 없으면 생성 및 시작
+                {
+                    broadcastTimer = new Timer(BroadcastAllRooms, null, 0, 300); // 300ms 주기로 동기화
+                    Console.WriteLine("동기화 타이머가 시작되었습니다.");
+                }
+          
+            
         }
 
         static void HandleJoinRoom(ClientInfo client, string roomId)
@@ -207,8 +215,6 @@ namespace GameServer
                     room.Clients.Add(client);
                     client.RoomId = roomId;
                     client.PlayerInput.playerId = 2;
-                   // client.PlayerInput.position = new Vector3(-0.47f, 1.3f, 3f);
-                    // client.PlayerId = 2; //방에 들어간 사람은 2
                     Console.WriteLine($"{client.EndPoint}님이 방 {roomId}에 참여했습니다.");
 
                     SendResponse(client.EndPoint, $"RoomJoined|{roomId}|방에 참여했습니다.");
@@ -220,9 +226,7 @@ namespace GameServer
                         {
                             SendResponse(c.EndPoint, $"GameStart|{roomId}|게임을 시작합니다.");
                         }
-                        // 게임 시작 후에 타이머 시작
-                        //broadcastTimer = new Timer(BroadcastAllRooms, null, 3100, 300);
-                        //Console.WriteLine("위치 동기화 브로드캐스트 시작.");
+
                         // 타이머 시작
                         StartRoomTimer(room);
 
@@ -248,6 +252,7 @@ namespace GameServer
 
                 try
                 {
+                    //플레이어의 position을 포함한 정보 update.
                     client.PlayerInput = JsonConvert.DeserializeObject<PlayerInputData>(jsonData);
                 }
                 catch (Exception ex)
@@ -255,8 +260,6 @@ namespace GameServer
                     SendResponse(client.EndPoint, $"Error|JSON 역직렬화 오류: {ex.Message}");
                     return;
                 }
-
-                //client.Position = inputData.position; //서버상의 client의 위치 업데이트 
 
                 foreach (var c in room.Clients)
                 {
@@ -325,11 +328,12 @@ namespace GameServer
 
         static void StartRoomTimer(Room room)
         {
-            if (room.RoomTimer == null)
-            {
-                room.RoomTimer = new Timer(state =>
+           
+                if (room.RoomTimer == null)
                 {
-                    
+                    room.RoomTimer = new Timer(state =>
+                    {
+
                         if (room.TimeRemaining > 0)
                         {
                             room.TimeRemaining -= 1; // 1초씩 감소
@@ -342,26 +346,34 @@ namespace GameServer
                             Console.WriteLine($"방 {room.RoomId}: 시간이 종료되었습니다.");
                             // 여기서 게임 종료 처리 추가 가능
                         }
-                    
-                }, null, 0, 1000); // 1초마다 실행
-            }
+
+                    }, null, 0, 1000); // 1초마다 실행
+                }
+            
         }
 
         static void StopRoomTimer(Room room)
         {
-            if (room.RoomTimer != null)
-            {
-                room.RoomTimer.Dispose();
-                room.RoomTimer = null;
-            }
+ 
+                if (room.RoomTimer != null)
+                {
+                    room.RoomTimer.Dispose();
+                    room.RoomTimer = null;
+                }
+            
+            
         }
 
         static void BroadcastRoomTime(Room room)
         {
-            foreach (var client in room.Clients)
+            lock (lockObj)
             {
-                SendResponse(client.EndPoint, $"TimerSync|{room.TimeRemaining}");
+                foreach (var client in room.Clients)
+                {
+                    SendResponse(client.EndPoint, $"TimerSync|{room.TimeRemaining}");
+                }
             }
+            
         }
 
     }

@@ -17,7 +17,8 @@ public class UDPClient : MonoBehaviour
     private Thread receiveThread;
     private bool isRunning = false;
 
-    public string serverIP = "127.0.0.1"; // 서버 IP 주소 (로컬 테스트이므로 localhost)
+    public string serverIP = "43.201.57.190";
+    //public string serverIP = "127.0.0.1"; // 서버 IP 주소 (로컬 테스트이므로 localhost)
     public int serverPort = 8080;         // 서버 포트 번호
     public int localPort = 0; // 0이면 자동 할당.
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-
+//데이터 서버측으로 보내고 받을 때 사용할 형식.
 [Serializable]
 public class PlayerInputData
 {
