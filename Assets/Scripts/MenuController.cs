@@ -54,7 +54,7 @@ public class MenuController : MonoBehaviour
                 SceneManager.LoadScene("MainScene");
                 break;
             case 1: //multi
-                SceneManager.LoadScene("multiTest");
+                SceneManager.LoadScene("roomScene");
                 break;
             case 2: // Settings, Scene 대신 Dialog로 바꾸거나 삭제할 생각 중
                 SceneManager.LoadScene("TrainingScene");

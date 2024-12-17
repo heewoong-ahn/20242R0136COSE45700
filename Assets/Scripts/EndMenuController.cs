@@ -24,7 +24,7 @@ public class EndMenuController : MonoBehaviour
     }
     void Update()
     {            
-        Debug.Log(player.isEnd);
+        //Debug.Log(player.isEnd);
         if (player.isEnd && Input.GetKeyDown(KeyCode.UpArrow))
         {
             selectedIndex--;
