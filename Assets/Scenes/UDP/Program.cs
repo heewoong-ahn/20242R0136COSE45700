@@ -1,4 +1,5 @@
-﻿/*using System;
+//서버코드
+/*﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -448,7 +449,7 @@ namespace GameServer
         }
     }       
 }
-
+*/
 
 
 
